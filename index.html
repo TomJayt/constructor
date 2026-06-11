@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Фразовый конструктор — картинки</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: #f0f2f5;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .app {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            padding: 12px;
+            gap: 12px;
+        }
+
+        /* Кнопки добавления */
+        .toolbar {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 60px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        }
+
+        .add-btn {
+            background: #3b82f6;
+            border: none;
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 600;
+            padding: 10px 20px;
+            border-radius: 40px;
+            cursor: pointer;
+        }
+
+        .add-multi {
+            background: #10b981;
+        }
+
+        .add-btn:active {
+            transform: scale(0.96);
+        }
+
+        #imageInput {
+            display: none;
+        }
+
+        /* Горизонтальный ряд */
+        .horizontal-row {
+            display: flex;
+            flex: 1;
+            gap: 12px;
+            min-height: 0;
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
+            padding: 4px 2px;
+        }
+
+        /* Карточка */
+        .card {
+            background: white;
+            border-radius: 28px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            aspect-ratio: 3 / 4;
+        }
+
+        /* Картинка */
+        .card-image {
+            width: 100%;
+            flex: 1;
+            object-fit: cover;
+            border-radius: 20px;
+            background: #e2e8f0;
+            pointer-events: none;
+        }
+
+        /* Кнопки управления */
+        .card-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .move-btn {
+            background: #64748b;
+            border: none;
+            color: white;
+            font-size: 0.9rem;
+            padding: 6px 0;
+            border-radius: 30px;
+            flex: 1;
+            text-align: center;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .move-btn:active {
+            transform: scale(0.94);
+        }
+
+        .move-btn:disabled {
+            opacity: 0.3;
+        }
+
+        .delete-btn {
+            background: #ef4444;
+            border: none;
+            color: white;
+            font-size: 0.9rem;
+            padding: 6px 0;
+            border-radius: 30px;
+            flex: 1;
+            cursor: pointer;
+        }
+
+        .delete-btn:active {
+            transform: scale(0.94);
+        }
+
+        /* Кнопка добавления в пустой слот */
+        .empty-card {
+            background: #f1f5f9;
+            border-radius: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            font-size: 1.2rem;
+            text-align: center;
+            padding: 12px;
+            aspect-ratio: 3 / 4;
+            cursor: pointer;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .empty-card:active {
+            background: #e2e8f0;
+        }
+
+        /* Панель фразы */
+        .phrase-panel {
+            background: white;
+            border-radius: 28px;
+            padding: 12px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+        }
+
+        .phrase-input {
+            width: 100%;
+            padding: 14px;
+            font-size: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 60px;
+            text-align: center;
+            font-family: inherit;
+            margin-bottom: 8px;
+        }
+
+        .speak-btn {
+            width: 100%;
+            background: #10b981;
+            border: none;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+            padding: 14px;
+            border-radius: 60px;
+            cursor: pointer;
+        }
+
+        .speak-btn:active {
+            transform: scale(0.97);
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <div class="toolbar">
+        <button class="add-btn add-multi" id="addMultipleBtn">📁 Добавить несколько</button>
+        <button class="add-btn" id="addSingleBtn">+1 Добавить</button>
+    </div>
+
+    <div class="horizontal-row" id="rowContainer"></div>
+
+    <div class="phrase-panel">
+        <input type="text" id="userPhrase" class="phrase-input" placeholder="Напиши фразу..." value="">
+        <button class="speak-btn" id="speakBtn">🔊 Озвучить фразу</button>
+    </div>
+
+    <input type="file" id="imageInput" accept="image/jpeg,image/png,image/webp" multiple style="display:none">
+</div>
+
+<script>
+    let cards = [];
+
+    const rowContainer = document.getElementById('rowContainer');
+    const addSingleBtn = document.getElementById('addSingleBtn');
+    const addMultipleBtn = document.getElementById('addMultipleBtn');
+    const imageInput = document.getElementById('imageInput');
+    const speakBtn = document.getElementById('speakBtn');
+    const userPhraseInput = document.getElementById('userPhrase');
+
+    function renderRow() {
+        rowContainer.innerHTML = '';
+        
+        const cardCount = cards.length;
+        
+        // Если нет картинок — показываем одну большую кнопку "Добавить"
+        if (cardCount === 0) {
+            const emptyDiv = document.createElement('div');
+            emptyDiv.className = 'empty-card';
+            emptyDiv.style.flex = '1';
+            emptyDiv.innerHTML = '➕<br>Нажмите +1';
+            emptyDiv.addEventListener('click', () => addImageToNewSlot());
+            rowContainer.appendChild(emptyDiv);
+            return;
+        }
+        
+        // Рисуем ВСЕ картинки (только реальные, без пустых слотов)
+        for (let i = 0; i < cards.length; i++) {
+            const cardData = cards[i];
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'card';
+            
+            // КЛЮЧЕВОЕ: ширина зависит от количества картинок
+            if (cards.length === 1) {
+                cardDiv.style.flex = '1';
+                cardDiv.style.minWidth = '100%';
+            } else if (cards.length === 2) {
+                cardDiv.style.flex = '1';
+                cardDiv.style.minWidth = 'calc(50% - 6px)';
+            } else if (cards.length === 3) {
+                cardDiv.style.flex = '1';
+                cardDiv.style.minWidth = 'calc(33.333% - 8px)';
+            } else if (cards.length === 4) {
+                cardDiv.style.flex = '1';
+                cardDiv.style.minWidth = 'calc(25% - 9px)';
+            }
+            
+            const img = document.createElement('img');
+            img.src = cardData.blobUrl;
+            img.className = 'card-image';
+            img.alt = 'картинка';
+            
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'card-actions';
+            
+            const leftBtn = document.createElement('button');
+            leftBtn.innerText = '←';
+            leftBtn.className = 'move-btn';
+            leftBtn.disabled = (i === 0);
+            leftBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                moveCardLeft(i);
+            });
+            
+            const rightBtn = document.createElement('button');
+            rightBtn.innerText = '→';
+            rightBtn.className = 'move-btn';
+            rightBtn.disabled = (i === cards.length - 1);
+            rightBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                moveCardRight(i);
+            });
+            
+            const deleteBtn = document.createElement('button');
+            deleteBtn.innerText = '🗑️';
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                deleteCard(i);
+            });
+            
+            actionsDiv.appendChild(leftBtn);
+            actionsDiv.appendChild(rightBtn);
+            actionsDiv.appendChild(deleteBtn);
+            
+            cardDiv.appendChild(img);
+            cardDiv.appendChild(actionsDiv);
+            rowContainer.appendChild(cardDiv);
+        }
+        
+        // Добавляем пустые слоты ТОЛЬКО если картинок МЕНЬШЕ 4
+        // НО! Чтобы они НЕ сжимали реальные картинки, они должны быть фиксированной ширины,
+        // либо мы их не добавляем, а просто оставляем пустое пространство?
+        // Лучше: не добавляем пустые слоты вообще. Пусть картинки занимают ВСЮ ширину.
+        // Если нужно добавить новую картинку — кнопка +1 всегда доступна сверху.
+        // Так 1 картинка реально занимает 100% ширины.
+    }
+    
+    function addImageToNewSlot() {
+        if (cards.length >= 4) {
+            alert('Максимум 4 картинки. Удалите лишнюю.');
+            return;
+        }
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/jpeg,image/png,image/webp';
+        input.multiple = false;
+        input.onchange = (e) => {
+            if (e.target.files && e.target.files.length > 0) {
+                const file = e.target.files[0];
+                const blobUrl = URL.createObjectURL(file);
+                cards.push({ blobUrl: blobUrl });
+                renderRow();
+            }
+        };
+        input.click();
+    }
+    
+    function addSingleImage() {
+        if (cards.length >= 4) {
+            alert('Максимум 4 картинки. Удалите лишнюю.');
+            return;
+        }
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/jpeg,image/png,image/webp';
+        input.multiple = false;
+        input.onchange = (e) => {
+            if (e.target.files && e.target.files.length > 0) {
+                const file = e.target.files[0];
+                const blobUrl = URL.createObjectURL(file);
+                cards.push({ blobUrl: blobUrl });
+                renderRow();
+            }
+        };
+        input.click();
+    }
+    
+    function addMultipleImages() {
+        imageInput.value = '';
+        imageInput.click();
+    }
+    
+    function handleMultipleFiles(files) {
+        const imageFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+        if (imageFiles.length === 0) return;
+        
+        let added = 0;
+        for (let file of imageFiles) {
+            if (cards.length >= 4) break;
+            const blobUrl = URL.createObjectURL(file);
+            cards.push({ blobUrl: blobUrl });
+            added++;
+        }
+        if (added < imageFiles.length) {
+            alert('Максимум 4 картинки. Добавлено ' + added + ' из ' + imageFiles.length);
+        }
+        renderRow();
+    }
+    
+    function deleteCard(index) {
+        if (cards[index] && cards[index].blobUrl) {
+            URL.revokeObjectURL(cards[index].blobUrl);
+        }
+        cards.splice(index, 1);
+        renderRow();
+    }
+    
+    function moveCardLeft(index) {
+        if (index <= 0) return;
+        [cards[index-1], cards[index]] = [cards[index], cards[index-1]];
+        renderRow();
+    }
+    
+    function moveCardRight(index) {
+        if (index >= cards.length - 1) return;
+        [cards[index], cards[index+1]] = [cards[index+1], cards[index]];
+        renderRow();
+    }
+    
+    function speakUserText() {
+        let text = userPhraseInput.value.trim();
+        if (text === "") {
+            text = "Напишите фразу";
+        }
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'ru-RU';
+        utterance.rate = 0.85;
+        utterance.pitch = 1.0;
+        window.speechSynthesis.speak(utterance);
+    }
+    
+    addSingleBtn.addEventListener('click', addSingleImage);
+    addMultipleBtn.addEventListener('click', addMultipleImages);
+    imageInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files.length > 0) {
+            handleMultipleFiles(e.target.files);
+        }
+        imageInput.value = '';
+    });
+    speakBtn.addEventListener('click', speakUserText);
+    
+    cards = [];
+    renderRow();
+    
+    window.addEventListener('beforeunload', () => {
+        for (let card of cards) {
+            if (card && card.blobUrl) URL.revokeObjectURL(card.blobUrl);
+        }
+    });
+</script>
+</body>
+</html>
