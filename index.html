@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Фразовый конструктор — картинки</title>
+    <title>Фразовый конструктор</title>
     <style>
         * {
             box-sizing: border-box;
@@ -14,7 +14,7 @@
         body {
             margin: 0;
             padding: 0;
-            background: #f0f2f5;
+            background: #f5f7fb;
             font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
             height: 100vh;
             display: flex;
@@ -27,7 +27,7 @@
             flex-direction: column;
             height: 100%;
             padding: 12px;
-            gap: 12px;
+            gap: 10px;
         }
 
         /* Кнопки добавления */
@@ -38,16 +38,17 @@
             background: white;
             padding: 8px 12px;
             border-radius: 60px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            flex-shrink: 0;
         }
 
         .add-btn {
             background: #3b82f6;
             border: none;
             color: white;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: 600;
-            padding: 10px 20px;
+            padding: 8px 16px;
             border-radius: 40px;
             cursor: pointer;
         }
@@ -64,7 +65,7 @@
             display: none;
         }
 
-        /* Горизонтальный ряд */
+        /* Горизонтальный ряд с картинками */
         .horizontal-row {
             display: flex;
             flex: 1;
@@ -76,46 +77,52 @@
             padding: 4px 2px;
         }
 
-        /* Карточка */
+        /* Карточка с картинкой */
         .card {
             background: white;
-            border-radius: 28px;
+            border-radius: 24px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            padding: 12px;
+            padding: 10px;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
             position: relative;
-            aspect-ratio: 3 / 4;
+            height: 100%;
         }
 
-        /* Картинка */
+        /* Контейнер для картинки с фиксированной пропорцией */
+        .image-container {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
         .card-image {
             width: 100%;
-            flex: 1;
-            object-fit: cover;
-            border-radius: 20px;
-            background: #e2e8f0;
+            height: 100%;
+            object-fit: contain;
             pointer-events: none;
         }
 
-        /* Кнопки управления */
+        /* Кнопки управления — ВСЕГДА ВНИЗУ, крупные и видны */
         .card-actions {
             display: flex;
-            gap: 8px;
-            margin-top: 10px;
-            width: 100%;
-            justify-content: center;
+            gap: 10px;
+            margin-top: 12px;
+            flex-shrink: 0;
         }
 
         .move-btn {
             background: #64748b;
             border: none;
             color: white;
-            font-size: 0.9rem;
-            padding: 6px 0;
-            border-radius: 30px;
+            font-size: 1.1rem;
+            padding: 10px 0;
+            border-radius: 40px;
             flex: 1;
             text-align: center;
             cursor: pointer;
@@ -123,43 +130,47 @@
         }
 
         .move-btn:active {
-            transform: scale(0.94);
+            transform: scale(0.95);
+            background: #4b5563;
         }
 
         .move-btn:disabled {
-            opacity: 0.3;
+            opacity: 0.4;
+            transform: none;
         }
 
         .delete-btn {
             background: #ef4444;
             border: none;
             color: white;
-            font-size: 0.9rem;
-            padding: 6px 0;
-            border-radius: 30px;
+            font-size: 1.1rem;
+            padding: 10px 0;
+            border-radius: 40px;
             flex: 1;
             cursor: pointer;
+            font-weight: bold;
         }
 
         .delete-btn:active {
-            transform: scale(0.94);
+            transform: scale(0.95);
+            background: #dc2626;
         }
 
-        /* Кнопка добавления в пустой слот */
+        /* Пустая карточка (добавить картинку) */
         .empty-card {
             background: #f1f5f9;
-            border-radius: 28px;
+            border-radius: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #94a3b8;
-            font-size: 1.2rem;
+            font-size: 1rem;
             text-align: center;
-            padding: 12px;
-            aspect-ratio: 3 / 4;
             cursor: pointer;
             flex-direction: column;
             gap: 8px;
+            height: 100%;
+            min-height: 200px;
         }
 
         .empty-card:active {
@@ -169,17 +180,18 @@
         /* Панель фразы */
         .phrase-panel {
             background: white;
-            border-radius: 28px;
-            padding: 12px;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            border-radius: 24px;
+            padding: 10px;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
+            flex-shrink: 0;
         }
 
         .phrase-input {
             width: 100%;
-            padding: 14px;
+            padding: 12px;
             font-size: 1rem;
             border: 2px solid #e2e8f0;
-            border-radius: 60px;
+            border-radius: 50px;
             text-align: center;
             font-family: inherit;
             margin-bottom: 8px;
@@ -191,14 +203,33 @@
             border: none;
             color: white;
             font-weight: bold;
-            font-size: 1.2rem;
-            padding: 14px;
-            border-radius: 60px;
+            font-size: 1.1rem;
+            padding: 12px;
+            border-radius: 50px;
             cursor: pointer;
         }
 
         .speak-btn:active {
             transform: scale(0.97);
+            background: #059669;
+        }
+
+        /* Адаптация под количество картинок */
+        .horizontal-row[data-count="1"] .card {
+            flex: 1;
+            min-width: 100%;
+        }
+        .horizontal-row[data-count="2"] .card {
+            flex: 1;
+            min-width: calc(50% - 6px);
+        }
+        .horizontal-row[data-count="3"] .card {
+            flex: 1;
+            min-width: calc(33.33% - 8px);
+        }
+        .horizontal-row[data-count="4"] .card {
+            flex: 1;
+            min-width: calc(25% - 9px);
         }
     </style>
 </head>
@@ -233,8 +264,8 @@
         rowContainer.innerHTML = '';
         
         const cardCount = cards.length;
+        rowContainer.setAttribute('data-count', cardCount);
         
-        // Если нет картинок — показываем одну большую кнопку "Добавить"
         if (cardCount === 0) {
             const emptyDiv = document.createElement('div');
             emptyDiv.className = 'empty-card';
@@ -245,32 +276,23 @@
             return;
         }
         
-        // Рисуем ВСЕ картинки (только реальные, без пустых слотов)
         for (let i = 0; i < cards.length; i++) {
             const cardData = cards[i];
             const cardDiv = document.createElement('div');
             cardDiv.className = 'card';
             
-            // КЛЮЧЕВОЕ: ширина зависит от количества картинок
-            if (cards.length === 1) {
-                cardDiv.style.flex = '1';
-                cardDiv.style.minWidth = '100%';
-            } else if (cards.length === 2) {
-                cardDiv.style.flex = '1';
-                cardDiv.style.minWidth = 'calc(50% - 6px)';
-            } else if (cards.length === 3) {
-                cardDiv.style.flex = '1';
-                cardDiv.style.minWidth = 'calc(33.333% - 8px)';
-            } else if (cards.length === 4) {
-                cardDiv.style.flex = '1';
-                cardDiv.style.minWidth = 'calc(25% - 9px)';
-            }
+            // Контейнер для картинки
+            const imgContainer = document.createElement('div');
+            imgContainer.className = 'image-container';
             
             const img = document.createElement('img');
             img.src = cardData.blobUrl;
             img.className = 'card-image';
             img.alt = 'картинка';
             
+            imgContainer.appendChild(img);
+            
+            // Кнопки управления — всегда снизу
             const actionsDiv = document.createElement('div');
             actionsDiv.className = 'card-actions';
             
@@ -304,17 +326,10 @@
             actionsDiv.appendChild(rightBtn);
             actionsDiv.appendChild(deleteBtn);
             
-            cardDiv.appendChild(img);
+            cardDiv.appendChild(imgContainer);
             cardDiv.appendChild(actionsDiv);
             rowContainer.appendChild(cardDiv);
         }
-        
-        // Добавляем пустые слоты ТОЛЬКО если картинок МЕНЬШЕ 4
-        // НО! Чтобы они НЕ сжимали реальные картинки, они должны быть фиксированной ширины,
-        // либо мы их не добавляем, а просто оставляем пустое пространство?
-        // Лучше: не добавляем пустые слоты вообще. Пусть картинки занимают ВСЮ ширину.
-        // Если нужно добавить новую картинку — кнопка +1 всегда доступна сверху.
-        // Так 1 картинка реально занимает 100% ширины.
     }
     
     function addImageToNewSlot() {
